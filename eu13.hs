@@ -1,0 +1,1 @@
+main = putStrLn . take 10 . show . sum . map read . lines =<< readFile "eu13.in"
