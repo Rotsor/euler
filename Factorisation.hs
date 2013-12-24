@@ -10,7 +10,7 @@ factor (p : ps) x
        | x `mod` p == 0 = p : factor (p : ps) (x `div` p)
        | otherwise = factor ps x
 
-factor' :: (Integral a, Integral b) => a -> [(a, b)]
+-- factor' :: (Integral a, Integral b) => a -> [(a, b)]
 factor' = map (head &&& genericLength) . group . factor primes
 
 
