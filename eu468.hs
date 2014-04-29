@@ -49,11 +49,11 @@ binoms sz = scanl (*) 1 (binomRatios sz)
 
 product' = treeFold (*)
 
-sFromTo :: Integer -> Integer -> Mod -> [(Integer, Integer)] -> Mod
+sFromTo :: Integer -> Integer -> [(Integer, Integer)] -> Mod
 {- a inclusive, b not inclusive -}
-sFromTo a b m ((p, c) : x)
-  | b > p = m * (fromIntegral $ p - a) + sFromTo p b (m * fromIntegral p ^ c) x
-sFromTo a b m _ = m * (fromIntegral $ b - a)
+sFromTo a b ((p, c) : x)
+  | b > p = fromIntegral (p - a) + (fromIntegral p ^ c) * sFromTo p b x
+sFromTo a b _ = fromIntegral $ b - a
 
 main =
   let sz = 44444 in
