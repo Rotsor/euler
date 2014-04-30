@@ -31,9 +31,12 @@ ifold f def (h : t) = f h . ifold f def . pairwise f $ t
 
 ifoldInf f ~(h : t) = f h . ifoldInf f . pairwise f $ t
 
+mkP :: Integral a => [a] -> [a]
 mkP p = 2 : 3 : minus [5,7..] (ifoldInf lMerge (map (\p -> [p*p, p*p+2*p..]) (tail p)))
 
+primes1 :: Integral a => [a]
 primes1 = mkP primes1
+primes :: Integral a => [a]
 primes = mkP primes1
 
 data Bound a = MinBound | ExactBound a | MaxBound deriving (Ord, Eq)
