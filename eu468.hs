@@ -13,27 +13,6 @@ import qualified Data.Map as Map
 import qualified Data.FingerTree as FT
 import Data.FingerTree((><),ViewL(..),(<|))
 
-newtype Inte = Inte { unInte :: Map.Map Int Int } deriving Eq
-
-instance Num Inte where
-  Inte x * Inte y = Inte $ Map.unionWith (+) x y
-  fromInteger x = Inte $ Map.fromList (factor' $ fromIntegral x)
-
-instance Fractional Inte where
-  x / y = x * recip y
-  recip (Inte m) = Inte $ fmap negate m
-
-instance Show Inte where
-  show = show . toRational
-
-instance Enum Inte where
-instance Real Inte where
-  toRational (Inte x) = product . map (\(p,pc) -> fromIntegral p ^^ pc) . Map.toList $ x
-
-
-instance Ord Inte where
-  compare = comparing toRational
-
 newtype Mod = Mod Int64 deriving (Eq, Show)
 
 mm :: Integral x => x -> x
@@ -50,17 +29,7 @@ instance Integral Mod where
 
 facts sz = factorisationsTo sz primes
 
-binomRatios sz = let f = sort $ map (Inte . Map.fromList) $ facts sz in zipWith (/) (reverse f) f
-
-binoms sz = scanl (*) 1 (binomRatios sz)
-
-product' = treeFold (*)
-
-sFromTo :: Int -> Int -> [(Int, Int)] -> Mod
-{- a inclusive, b not inclusive -}
-sFromTo a b ((p, c) : x)
-  | b > p = fromIntegral (p - a) + (fromIntegral p ^ c) * sFromTo p b x
-sFromTo a b _ = fromIntegral $ b - a
+binomRatios sz = let f = map snd $ sort $ map (\l -> (product . map (uncurry (^))$ l, l)) $ facts sz in zip (reverse f) f
 
 data Measure = Measure
                !Int {- prime -}
@@ -79,7 +48,8 @@ instance FT.Measured Measure Node where
 manyPrimes cut =
   FT.fromList ((\ps ->
                  Node 2 0 0 :
-                 zipWith (\p0 p -> Node p p0 0) ps (tail ps)) ((++[fromIntegral cut])$ map fromIntegral $ takeWhile (<cut) primes))
+                 zipWith (\p0 p -> Node p p0 0) ps (tail ps))
+               ((++[fromIntegral cut])$ map fromIntegral $ takeWhile (<cut) primes))
 
 addPrimes = go 0 where
   go pinc [] ft = ft
@@ -91,21 +61,10 @@ addPrimes = go 0 where
 
 gogo sz = snd $ go (manyPrimes (sz + 1)) (binomRatios sz) where
   go ft = foldl' step (ft,sFT ft)
-  step (!ft,!acc) ratio =
-    (addPrimes (map (fromIntegral *** fromIntegral) . Map.toList . unInte $ ratio) ft
+  step (!ft,!acc) (a,b) =
+    ((addPrimes (map (second negate) $ reverse b) . addPrimes (reverse a)) ft
      , acc + sFT ft)
 
 sFT ft = (\(Measure _ s _) -> s) (FT.measure ft)
 
-sTo :: Int -> [(Int, Int)] -> Mod
-sTo n l = (\(Measure _ s _) -> s) (FT.measure ft)
-   where
-    ft = FT.fromList (build 0 (map (fromIntegral *** fromIntegral) $ filter ((<n) . fst) l))
-    
-    build p0 ((p,pp):ps) = Node p p0 pp : build p ps
-    build p0 [] = [Node (fromIntegral n) p0 0]
-
-main = print $ gogo 1111111 {-
-  let sz = 44444 in
-  print $ fromIntegral $ (sum $ map (length . filter ((/=0) . snd) . Map.toList . unInte) (binoms sz))
--}
+main = print $ gogo 11111111
